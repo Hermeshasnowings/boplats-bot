@@ -1,31 +1,41 @@
+import os
 import discord
+from discord.ext import commands
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+import asyncio
 
-#Bot token from discord
-TOKEN = 'token.env'
+# Load environment variables from .env file
+load_dotenv()
 
-#init client
-discord.Client()
+# Bot token and channel ID from .env file
+TOKEN = os.getenv('DISCORD_TOKEN')
+CHANNEL_ID = int(os.getenv('DISCORD_CHANNEL_ID'))
 
-#boplats scrape
+# Define intents
+intents = discord.Intents.default()
+intents.message_content = True  # Enable the message content intent (necessary to read message contents)
 
-_URL = "https://nya.boplats.se/sok"
+# Create an instance of a bot with the specified intents
+bot = commands.Bot(command_prefix='!', intents=intents)
 
-#seen listings
+# Boplats URL
+LISTINGS_URL = "https://nya.boplats.se/sok"
 
+# Seen listings
 seen_listings = set()
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f'We have logged in as {client.user}')
-    
+    print(f'We have logged in as {bot.user}')
+    bot.loop.create_task(background_task())  # Schedule the background task
+
 async def check_for_new_listings():
     response = requests.get(LISTINGS_URL)
     soup = BeautifulSoup(response.text, 'html.parser')
     
-# Adjust this to target the specific elements of the website
+    # Adjust this to target the specific elements of the website
     listings = soup.find_all('div', class_='listing-item')
 
     new_listings = []
@@ -35,25 +45,26 @@ async def check_for_new_listings():
             seen_listings.add(listing_id)
             new_listings.append(listing)
     
-# If new listings were found, send a message
+    # If new listings were found, send a message
     if new_listings:
-        channel = client.get_channel(chan.env)
-        for listing in new_listings:
-            await channel.send(f"New listing found: {listing.find('a').get('href')}")
+        channel = bot.get_channel(CHANNEL_ID)
+        if channel:
+            for listing in new_listings:
+                await channel.send(f"New listing found: {listing.find('a').get('href')}")
+        else:
+            print(f"Channel with ID {CHANNEL_ID} not found.")
 
-@client.event
+@bot.event
 async def on_message(message):
     if message.content.startswith('!check'):
         await check_for_new_listings()
 
 # Schedule the bot to periodically check for new listings
-import asyncio
-
 async def background_task():
-    await client.wait_until_ready()
-    while not client.is_closed():
+    await bot.wait_until_ready()
+    while not bot.is_closed():
         await check_for_new_listings()
         await asyncio.sleep(60 * 10)  # Check every 10 minutes
 
-client.loop.create_task(background_task())
-client.run(TOKEN)
+if __name__ == "__main__":
+    asyncio.run(bot.start(TOKEN))
