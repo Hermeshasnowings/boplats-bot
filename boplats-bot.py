@@ -37,7 +37,7 @@ async def check_for_new_listings():
     
 # If new listings were found, send a message
     if new_listings:
-        channel = client.get_channel(YOUR_CHANNEL_ID)
+        channel = client.get_channel(chan.env)
         for listing in new_listings:
             await channel.send(f"New listing found: {listing.find('a').get('href')}")
 
