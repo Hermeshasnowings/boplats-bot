@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import asyncio
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -29,15 +30,34 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 # Boplats URL
 LISTINGS_URL = "https://nya.boplats.se/sok?types=1hand&area=508A8CB4FBDC002E000345E7"
 
-# Seen listings
-seen_listings = set()
+# Load seen listings from a file
+def load_seen_listings():
+    try:
+        with open('seen_listings.json', 'r') as f:
+            return set(json.load(f))
+    except FileNotFoundError:
+        return set()
 
-channel = bot.get_channel(CHANNEL_ID)
+# Save seen listings to a file
+def save_seen_listings(seen_listings):
+    with open('seen_listings.json', 'w') as f:
+        json.dump(list(seen_listings), f)
+        
+# Seen listings
+#seen_listings = set()
+
+
+# Load seen listings at startup
+seen_listings = load_seen_listings()
+
 
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user.name}')
     bot.loop.create_task(background_task())  # Schedule the background task
+
+channel = bot.get_channel(CHANNEL_ID)
+
 
 async def check_for_new_listings():
     response = requests.get(LISTINGS_URL)
@@ -62,6 +82,13 @@ async def check_for_new_listings():
                 await channel.send(f"New listing found: {link}")
         else:
             print(f"Channel with ID {CHANNEL_ID} not found.")
+            
+    save_seen_listings(seen_listings)
+            
+# Save seen listings before the bot shuts down
+@bot.event
+async def on_disconnect():
+    save_seen_listings(seen_listings)
 
 @bot.event
 async def on_message(message):
