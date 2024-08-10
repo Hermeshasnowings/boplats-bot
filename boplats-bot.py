@@ -69,7 +69,10 @@ async def check_for_new_listings():
 
     new_listings = []
     for listing in listings:
-        listing_id = listing.get('data-id')  # Example of how you might identify a unique listing
+        #find address div and extract the text
+        address_div = listing.find('div', class_='search-result-address')
+        listing_id = address_div.text.strip()  # Need to use text as identifier as there is no int id
+        print(listing_id)
         if listing_id and listing_id not in seen_listings:
             seen_listings.add(listing_id)
             new_listings.append(listing)
