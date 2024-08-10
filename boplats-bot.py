@@ -43,10 +43,6 @@ def save_seen_listings(seen_listings):
     with open('seen_listings.json', 'w') as f:
         json.dump(list(seen_listings), f)
         
-# Seen listings
-#seen_listings = set()
-
-
 # Load seen listings at startup
 seen_listings = load_seen_listings()
 
@@ -73,9 +69,34 @@ async def check_for_new_listings():
         address_div = listing.find('div', class_='search-result-address')
         listing_id = address_div.text.strip()  # Need to use text as identifier as there is no int id
         print(listing_id)
+        
         if listing_id and listing_id not in seen_listings:
             seen_listings.add(listing_id)
             new_listings.append(listing)
+            
+            #get more details
+            price_div = listing.find('div', class_='search-result-price')
+            size_div = listing.find('div', class_='pure-u-2-5')
+            room_div = listing.find('div', class_='pure-u-1-2.right-align')
+            link_a = listing.find('a', class_='search-result-link')
+            #more deets here please
+            
+            # Extract the actual link from the 'href' attribute
+            link_url = link_a['href'] if link_a else 'N/A'
+            
+            details = (
+                    f"**Address:** {listing_id}\n"
+                    f"**Price:** {price_div.text.strip() if price_div else 'N/A'}\n"
+                    f"**Size:** {size_div.text.strip() if size_div else 'N/A'}\n"
+                    f"**Rooms:** {room_div.text.strip() if room_div else 'N/A'}\n"
+                    f"**Link:** [View Listing]({link_url})\n"
+                )
+            
+            # Send to the channel
+            channel = bot.get_channel(CHANNEL_ID)
+            if channel:
+                    await channel.send("***New listing!***")
+                    await channel.send(details)
     
     # If new listings were found, send a message
     if new_listings:
@@ -91,6 +112,7 @@ async def check_for_new_listings():
 # Save seen listings before the bot shuts down
 @bot.event
 async def on_disconnect():
+    print('saving seen listings...')
     save_seen_listings(seen_listings)
 
 @bot.event
