@@ -62,7 +62,7 @@ async def check_for_new_listings():
     # Adjust this to target the specific elements of the website
     listings = soup.find_all('div', class_='search-result-item')
     print(listings)
-
+    
     new_listings = []
     for listing in listings:
         #find address div and extract the text
@@ -78,7 +78,8 @@ async def check_for_new_listings():
             area_div = listing.find('div', class_='search-result-area-name')
             price_div = listing.find('div', class_='search-result-price')
             size_div = listing.find('div', class_='pure-u-2-5')
-            room_div = listing.find('div', class_='pure-u-1-2.right-align')
+            room_div = listing.find('div', {'class': lambda x: x and 'pure-u-1-2' in x})
+            publ_div = listing.find('div', class_='publ-date')
             img_tag = listing.find('img')
             
             # Extract image URL
@@ -90,6 +91,7 @@ async def check_for_new_listings():
                     f"**Price:** {price_div.text.strip() if price_div else 'N/A'}\n"
                     f"**Size:** {size_div.text.strip() if size_div else 'N/A'}\n"
                     f"**Rooms:** {room_div.text.strip() if room_div else 'N/A'}\n"
+                    f"{publ_div.text.strip() if publ_div else 'N/A'}\n"
                     f"{img_url}\n" if img_url != 'N/A' else "No image available\n"
                 )
             
