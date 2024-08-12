@@ -46,13 +46,13 @@ def save_seen_listings(seen_listings):
 # Load seen listings at startup
 seen_listings = load_seen_listings()
 
+channel = bot.get_channel(CHANNEL_ID)
 
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user.name}')
     bot.loop.create_task(background_task())  # Schedule the background task
-
-channel = bot.get_channel(CHANNEL_ID)
+    await language_select();
 
 
 async def check_for_new_listings():
@@ -129,6 +129,17 @@ async def background_task():
     while not bot.is_closed():
         await check_for_new_listings()
         await asyncio.sleep(60 * 10)  # Check every 10 minutes
+        
+async def language_select():
+    channel = bot.get_channel(CHANNEL_ID)
+    message = await channel.send("Please Select A Language:")
+
+    flag_se = "🇸🇪"  # Sweden Flag Unicode Emoji
+    flag_gb = "🇬🇧"  # United Kingdom Flag Unicode Emoji
+
+    await message.add_reaction(flag_se)
+    await message.add_reaction(flag_gb)
+        
 
 if __name__ == "__main__":
     bot.run(TOKEN)
