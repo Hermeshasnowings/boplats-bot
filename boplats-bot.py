@@ -132,13 +132,33 @@ async def background_task():
         
 async def language_select():
     channel = bot.get_channel(CHANNEL_ID)
-    message = await channel.send("Please Select A Language:")
+    message = await channel.send("Please Select a Language:")
 
     flag_se = "🇸🇪"  # Sweden Flag Unicode Emoji
     flag_gb = "🇬🇧"  # United Kingdom Flag Unicode Emoji
 
-    await message.add_reaction(flag_se)
-    await message.add_reaction(flag_gb)
+    await message.add_reaction(flag_se) # send se flag emoji
+    await message.add_reaction(flag_gb) # send gb flag emoji
+    
+    #wait for reaction
+
+    reaction = await bot.wait_for("reaction_add")  # Wait for a reaction
+    await channel.send(f"Language set to: {reaction[0]}")  # [0] only display the emoji
+    print(reaction[0])
+    choice = str(reaction[0])
+    
+    #if flag is gb proceed in english, else swedish
+    
+    if choice == "'🇬🇧'" or choice == ":flag_gb:":
+        await channel.send("Language set to English")
+        language = "en"
+        with open('language.json', 'w') as f:
+            json.dump(language, f)
+    elif choice == "🇸🇪" or  choice == ":flag_se:":
+        await channel.send("Språk satt till Svenska")
+        language = "'se'"
+        with open('language.json', 'w') as f:
+            json.dump(language, f)
         
 
 if __name__ == "__main__":
