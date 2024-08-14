@@ -85,28 +85,35 @@ async def check_for_new_listings():
             # Extract image URL
             img_url = img_tag['src'] if img_tag else 'N/A'  # Use 'src' to get the image URL
             
-            details = (
-                    f"**Area:** {area_div.text.strip() if area_div else 'N/A'}\n"
-                    f"**Address:** {listing_id}\n"
-                    f"**Price:** {price_div.text.strip() if price_div else 'N/A'}\n"
-                    f"**Size:** {size_div.text.strip() if size_div else 'N/A'}\n"
-                    f"**Rooms:** {room_div.text.strip() if room_div else 'N/A'}\n"
-                    f"{publ_div.text.strip() if publ_div else 'N/A'}\n"
-                    f"{img_url}\n" if img_url != 'N/A' else "No image available\n"
-                )
+            # create the embed
+            embed = discord.Embed(
+                title=area_div.text.strip() if area_div else 'N/A',  # Area
+                description=listing_id,  # Description of the listing
+                color=discord.Color.blue()  # You can set a color for the embed
+            )
+            
+            #embed details                
+            embed.add_field(name="Price", value=price_div.text.strip() if price_div else 'N/A', inline=False)
+            embed.add_field(name="Rooms", value=room_div.text.strip() if room_div else 'N/A', inline=False)
+            embed.add_field(name="Size", value=size_div.text.strip() if size_div else 'N/A', inline=False)
+            embed.add_field(name="Published", value=publ_div.text.strip() if publ_div else 'N/A', inline=False)
+            link = listing.find('a')['href']
+            embed.add_field(name="Link", value=link, inline=False)
+            
+            #embed image
+            embed.set_image(url=img_tag['src']),
             
             # Send to the channel
             channel = bot.get_channel(CHANNEL_ID)
             if channel:
                     await channel.send("***New listing!***")
-                    await channel.send(details)
+                    await channel.send(embed=embed)
     
     # If new listings were found, send a message
     if new_listings:
         if channel:
             for listing in new_listings:
                 link = listing.find('a')['href']
-                await channel.send(f"**Link**: {link}")
         else:
             print(f"Channel with ID {CHANNEL_ID} not found.")
             
@@ -159,6 +166,8 @@ async def language_select():
         language = "'se'"
         with open('language.json', 'w') as f:
             json.dump(language, f)
+            
+
         
 
 if __name__ == "__main__":
