@@ -166,7 +166,21 @@ async def language_select():
         language = "'se'"
         with open('language.json', 'w') as f:
             json.dump(language, f)
-            
+
+#search area select
+async def area_select():
+    channel = bot.get_channel(CHANNEL_ID)
+    await channel.send("Select a search Area")
+    
+    # get search area from boplats
+    response = requests.get(LISTINGS_URL)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    areas = soup.find_all('class', class_='level0')
+    
+    area_class = areas.find('class', class_='level0')
+    print (area_class)
+    
+    
 
         
 
