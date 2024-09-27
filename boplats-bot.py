@@ -53,6 +53,7 @@ async def on_ready():
     print(f'We have logged in as {bot.user.name}')
     bot.loop.create_task(background_task())  # Schedule the background task
     await language_select();
+    await area_select();
 
 
 async def check_for_new_listings():
@@ -135,6 +136,7 @@ async def background_task():
     await bot.wait_until_ready()
     while not bot.is_closed():
         await check_for_new_listings()
+        print("Checking for new listings")
         await asyncio.sleep(60 * 10)  # Check every 10 minutes
         
 async def language_select():
@@ -167,19 +169,33 @@ async def language_select():
         with open('language.json', 'w') as f:
             json.dump(language, f)
 
-#search area select
+#area select
 async def area_select():
     channel = bot.get_channel(CHANNEL_ID)
-    await channel.send("Select a search Area")
+    await channel.send("**Please select an area by typing the name:**")
     
-    # get search area from boplats
-    response = requests.get(LISTINGS_URL)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    areas = soup.find_all('class', class_='level0')
+    area_dict = {
+        "Göteborg" : "508A8CB406FE001F00030A60",
+        "Ale" : "508A8CB4FCA4001400031899",
+        "Alingsås" : "508A8CB4FD9A001500037B0A",
+        "Borås" : "508A8CB400A1001800031575",
+        "Herrljunga" : "508A8CB4F7A90021000303AE",
+        "Härryda" : "508A8CB4044A002300035C4C"
+    }
     
-    area_class = areas.find('class', class_='level0')
-    print (area_class)
+    for area in area_dict:
+        await channel.send(area)
     
+
+# When the bot joins a new server
+@bot.event
+async def on_guild_join(guild):
+    # Try to find the first available text channel
+    for channel in guild.text_channels:
+        if channel.permissions_for(guild.me).send_messages:
+            await channel.send(f"Hello! Thanks for adding me to {guild.name}. "
+                               f"Please set the channel for bot updates by using `!setchannel #channel-name`.")
+            break
     
 
         
